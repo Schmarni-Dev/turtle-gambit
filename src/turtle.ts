@@ -203,12 +203,18 @@ export class Turtle extends EventEmitter {
 			case 'left':
 				this.d += 3;
 				this.d %= 4;
+				console.log(this.d.toString());
 				break;
 			case 'right':
 				this.d++;
 				this.d %= 4;
+				console.log(this.d.toString());
 				break;
 		}
+		this.updatePos();
+	}
+
+	async updatePos() {
 		this.world.updateTurtle(this, this.x, this.y, this.z, this.d);
 		await this.updateBlock();
 		this.emit('update');
@@ -321,6 +327,65 @@ export class Turtle extends EventEmitter {
 			this.ws.on('message', listener);
 		});
 	}
+	goTo(rot1: number,st1: number,rot2: number,st2: number,st3: number): void {
+		const nonce = getNonce();
+		this.ws.send(JSON.stringify({
+			type: 'goTo',
+			rot1: rot1 || 0,
+			st1: st1 || 0,
+			rot2: rot2 || 0,
+			st2: st2 || 0,
+			st3: st3 || 0,
+			nonce
+		}));
+
+		const listener = async (resp: string) => {
+			try {
+				let res = JSON.parse(resp);
+				if (res.nonce === nonce) {
+					if (res.data === 'end') {
+						await this.updateInventory();
+						await this.updateBlock();
+						this.fuel = await this.exec<number>('turtle.getFuelLevel()');
+						this.ws.off('message', listener);
+						return;
+					} else {
+						if (res.move) {
+							let clearBlock = false;
+							if (res.move === 'l') {
+								this.d += 3;
+								this.d %= 4;
+							} else if (res.move === 'r') {
+								this.d += 1;
+								this.d %= 4;
+							} else if (res.move === 'f') {
+								let deltas = this.getDirectionDelta(this.d);
+								this.x += deltas[0];
+								this.z += deltas[1];
+								clearBlock = true;
+							} else if (res.move === 'u') {
+								this.y++;
+								clearBlock = true;
+							} else if (res.move === 'd') {
+								this.y--;
+								clearBlock = true;
+							}
+							if (clearBlock) {
+								this.world.updateBlock(this.x, this.y, this.z, 'No block to inspect');
+							}
+							this.world.updateTurtle(this, this.x, this.y, this.z, this.d);
+						}
+						
+						
+						this.emit('update');
+					}
+				}
+			} catch (e) { }
+		}
+
+		this.ws.on('message', listener);
+	}
+	
 	mineTunnel(direction: 'up' | 'forward' | 'down', length: number): void {
 		const nonce = getNonce();
 		this.ws.send(JSON.stringify({
@@ -329,7 +394,7 @@ export class Turtle extends EventEmitter {
 			direction,
 			nonce
 		}));
-
+	
 		const listener = async (resp: string) => {
 			try {
 				let res = JSON.parse(resp);

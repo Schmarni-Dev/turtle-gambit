@@ -532,6 +532,8 @@ function undergoMitosis()
 	return cloneId
 end
 
+
+
 function mineTunnel(obj, ws)
 	local file
 	local blocks = {}
@@ -593,9 +595,55 @@ function mineTunnel(obj, ws)
 	return blocks
 end
 
+function goTo(obj, ws)
+	local file
+    print("GOTO")
+	for i=1,20,1 do
+		
+			
+				
+	    local success = turtle.up()
+		if not success then
+			return res
+		end
+		ws.send(json.encode({move="u", nonce=obj.nonce}))
+			
+	end
+    for i=1,obj.rot1 ,1 do
+        turtle.turnRight()
+        ws.send(json.encode({move="r", nonce=obj.nonce}))
+    end
+    for i=1,obj.st1 ,1 do
+        local success = turtle.forward()
+		if not success then
+			return res
+		end
+		ws.send(json.encode({move="f", nonce=obj.nonce}))
+    end
+    for i=1,obj.rot2 ,1 do
+        turtle.turnRight()
+        ws.send(json.encode({move="r", nonce=obj.nonce}))
+    end
+    for i=1,obj.st2 ,1 do
+        local success = turtle.forward()
+		if not success then
+			return res
+		end
+		ws.send(json.encode({move="f", nonce=obj.nonce}))
+    end
+    for i=1,obj.st3 ,1 do
+        local success = turtle.down()
+		if not success then
+			return res
+		end
+		ws.send(json.encode({move="d", nonce=obj.nonce}))
+    end
+    return nil
+end
+
 function websocketLoop()
 	
-	local ws, err = http.websocket("ws://ottomated.net:43509")
+	local ws, err = http.websocket("ws://schmerver.mooo.com:57")
  
 	if err then
 		print(err)
@@ -626,7 +674,11 @@ function websocketLoop()
 			elseif obj.type == 'mine' then
 				local status, res = pcall(mineTunnel, obj, ws)
 				ws.send(json.encode({data="end", nonce=obj.nonce}))
-			end
+            elseif obj.type == 'goTo' then
+                print("goTo")
+            local status, res = pcall(goTo, obj, ws)
+            ws.send(json.encode({data="end", nonce=obj.nonce}))
+            end
 		end
 	end
 	if ws then

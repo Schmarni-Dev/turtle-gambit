@@ -122,6 +122,12 @@ export class Turtle extends EventEmitter {
 	async mineTunnel(direction: string, length: number) {
 		return window.exec<string>(this.id, 'mineTunnel', direction, length);
 	}
+	async goTo(rot1: number,st1: number,rot2: number,st2: number,st3: number) {
+		return window.exec<string>(this.id, 'goTo', rot1,st1,rot2,st2,st3);
+	}
+	async updatePos() {
+		return window.exec<string>(this.id, 'updatePos');
+	}
 }
 
 export interface World {

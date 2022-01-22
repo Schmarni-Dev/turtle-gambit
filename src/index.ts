@@ -6,7 +6,7 @@ import { Turtle } from './turtle';
 import World from './world';
 import Queue from 'p-queue';
 
-const wss = new Server({ port: 5757 });
+const wss = new Server({host: "192.168.2.100", port: 57 });
 
 let app: App;
 let turtles: { [id: number]: Turtle } = {};

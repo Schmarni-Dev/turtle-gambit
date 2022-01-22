@@ -20,6 +20,7 @@ import DialogActions from '@material-ui/core/DialogActions/DialogActions';
 import TurtleSwitcher from './TurtleSwitcher';
 import { DialogContentText } from '@material-ui/core';
 
+
 export interface TurtlePageProps {
 	turtle: Turtle;
 	enabled: boolean;
@@ -58,9 +59,12 @@ function CircularProgressWithLabel(props: CircularProgressProps & { label: any }
 }
 
 
+
 export default function TurtlePage({ turtle, enabled, setDisableEvents }: TurtlePageProps) {
 	const [signText, setSignText] = useState<string | null>(null);
 	const [commandText, setCommandText] = useState<string | null>(null);
+	const [GotoCords, setGotoCord] = useState<string | null>(null);
+	const [Cords, setCords] = useState<string | null>(null);
 	const [commandResult, setCommandResult] = useState<string | null>(null);
 	const [mineLength, setMineLength] = useState<string>('');
 	const currentSignDirection = useRef<BlockDirection>(BlockDirection.FORWARD);
@@ -92,6 +96,112 @@ export default function TurtlePage({ turtle, enabled, setDisableEvents }: Turtle
 						setSignText(null);
 						turtle.place(currentSignDirection.current, signText!);
 					}}>Place</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog disableBackdropClick open={GotoCords !== null} onClose={() => setGotoCord(null)}>
+				<DialogTitle>Enter Cords</DialogTitle>
+				<DialogContent>
+					<TextField value={GotoCords || ''} onChange={(ev) => setGotoCord(ev.target.value)} variant="outlined" />
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setGotoCord(null)}>Cancel</Button>
+					<Button onClick={() => {
+						setGotoCord(null);
+						if (GotoCords != null) 
+						{
+							let rot1: number = 0;
+							let rot2: number = 0;
+							let st1: number = 0;
+							let st2: number = 0;
+							let st3: number = 0;
+							let d: number = 0;
+							var cords = GotoCords.split(",").map(Number);
+							if (turtle.x < cords[0])
+							{
+								if (turtle.d == 2)
+								{
+									rot1 = 3;
+								}
+								else if (turtle.d == 0)
+								{
+									rot1 = 1;
+								}
+								else if (turtle.d == 3)
+								{
+									rot1 = 2;
+								}
+								d = 1;
+								st1 = turtle.x -= cords[0];
+							}
+							else if (turtle.x > cords[0])
+							{
+								if (turtle.d == 0)
+								{
+									rot1 = 3;
+								}
+								else if (turtle.d == 1)
+								{
+									rot1 = 2;
+								}
+								else if (turtle.d == 2)
+								{
+									rot1 = 1;
+								}
+								d = 3;
+								st1 = turtle.x += cords[0];
+							}
+
+
+							if (turtle.z < cords[1])
+							{
+								if (d == 1)
+								{
+									rot2 = 1;
+								}
+								else if (d == 3)
+								{
+									rot2 = 3;
+								}							
+								st2 = turtle.z -= cords[1];
+							}
+							if (turtle.z > cords[1])
+							{
+								if (d == 3)
+								{
+									rot2 = 1;
+								}
+								else if (d == 1)
+								{
+									rot2 = 3;
+								}							
+								st2 = turtle.z -= cords[1];
+							}
+							st3 = 260; //turtle.y -= cords[1];
+							turtle.goTo(rot1,Math.abs(st1),rot2 ,Math.abs(st2),Math.abs(st3))
+						}
+					}}>GO</Button>
+				</DialogActions>
+			</Dialog>
+			<Dialog disableBackdropClick open={Cords !== null} onClose={() => setCords(null)}>
+				<DialogTitle>Enter New Turtle Cords</DialogTitle>
+				<DialogContent>
+					<TextField value={Cords || ''} onChange={(ev) => setCords(ev.target.value)} variant="outlined" />
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={() => setGotoCord(null)}>Cancel</Button>
+					<Button onClick={() => {
+						setCords(null);
+						if (Cords != null) 
+						{
+							
+							var cords = Cords.split(",");
+							turtle.x = parseInt(cords[0]);
+							turtle.z = parseInt(cords[1]);
+							turtle.y = parseInt(cords[2]);
+							turtle.updatePos();
+						
+						}
+					}}>Set</Button>
 				</DialogActions>
 			</Dialog>
 			<Dialog disableBackdropClick open={commandText !== null} onClose={() => setCommandText(null)}>
@@ -138,6 +248,10 @@ export default function TurtlePage({ turtle, enabled, setDisableEvents }: Turtle
 						<Button tabIndex="-1" variant="outlined" color="primary" onClick={() => turtle.refresh()}>Refresh Info</Button>
 						<Button tabIndex="-1" variant="outlined" color="primary" onClick={() => turtle.undergoMitosis()}>Undergo Mitosis</Button>
 						<Button tabIndex="-1" variant="outlined" color="primary" onClick={() => setCommandText('')}>Run Command</Button>
+					</ColoredButtonGroup>
+					<ColoredButtonGroup size="small" orientation="vertical" groupColor='#9738FF'>
+						<Button tabIndex="-1" variant="outlined" color="primary" onClick={() => setGotoCord('')}>Goto</Button>
+						<Button tabIndex="-1" variant="outlined" color="primary" onClick={() => setCords('')}>Set Turtle Cords</Button>
 					</ColoredButtonGroup>
 					<TextField
 						label="Mine Tunnel"

@@ -120,7 +120,8 @@ function TooltipRaycaster({ mouse, setHovered }: { mouse: RefObject<{ x: number,
 			if (object.name) break;
 		}
 		if (object) {
-			setHovered(object.name);
+			setHovered(object.name +"  x:"+ String(object.position.x)+"  z:"+String(object.position.z)+"  y:"+String(object.position.y));
+			
 		} else {
 			setHovered('');
 		}
