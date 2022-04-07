@@ -3,15 +3,15 @@ import { Server } from 'ws';
 import { App, launch } from 'carlo';
 import { resolve } from 'path';
 import { Turtle } from './turtle';
-import World from './world';
 import Queue from 'p-queue';
+import World from './world';
 
 const wss = new Server({host: "192.168.2.100", port: 57 });
 
 let app: App;
 let turtles: { [id: number]: Turtle } = {};
 
-const world = new World();
+const world = new World;
 const queue = new Queue({ concurrency: 1 });
 const turtleAddQueue = new Queue({ concurrency: 1 });
 turtleAddQueue.pause();
@@ -44,8 +44,10 @@ turtleAddQueue.pause();
 
 })();
 wss.on('connection', async function connection(ws) {
+	// console.log("WS")
 	await turtleAddQueue.add(() => {
 		let turtle = new Turtle(ws, world);
+		// console.log(turtle)
 		turtle.on('init', async () => {
 			turtles[turtle.id] = turtle;
 			turtle.on('update', () => app.evaluate(`if (window.setTurtles) window.setTurtles(${serializeTurtles()})`));

@@ -189,14 +189,16 @@ export default function WorldRenderer({ turtle, world, disableEvents, ...props }
 				anchorEl: {
 					clientHeight: 0,
 					clientWidth: 0,
-					getBoundingClientRect: () => ({
-						top: position.current.y + 100,
+					getBoundingClientRect: () => {
+						return({top: position.current.y + 100,
 						left: position.current.x,
 						right: position.current.x,
 						bottom: position.current.y + 100,
 						width: 0,
 						height: 0,
-					}),
+						x:0,
+						y:0})
+					},
 				}
 			}}
 			onMouseMove={(ev) => {

@@ -101,12 +101,11 @@ export default function TurtlePage({ turtle, enabled, setDisableEvents }: Turtle
 			<Dialog disableBackdropClick open={GotoCords !== null} onClose={() => setGotoCord(null)}>
 				<DialogTitle>Enter Cords</DialogTitle>
 				<DialogContent>
-					<TextField value={GotoCords || ''} onChange={(ev) => setGotoCord(ev.target.value)} variant="outlined" />
+					<TextField value={GotoCords || ''} onChange={(ev) => setGotoCord(ev.target.value)} variant="outlined" label = "x" />
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={() => setGotoCord(null)}>Cancel</Button>
 					<Button onClick={() => {
-						setGotoCord(null);
 						if (GotoCords != null) 
 						{
 							let rot1: number = 0;
@@ -227,6 +226,7 @@ export default function TurtlePage({ turtle, enabled, setDisableEvents }: Turtle
 				</DialogActions>
 			</Dialog>
 			<div className={classes.toolbar} style={{ display: enabled ? undefined : "none" }}>
+				{/* {console.log(turtle)} */}
 				<Inventory turtle={turtle} />
 				<div className={classes.groups}>
 					<TurtleButtonGroup turtle={turtle} func="dig" color='#e74c3c' />

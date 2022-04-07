@@ -48,6 +48,8 @@ interface InventoryProps {
 	turtle: Turtle;
 }
 
+
+
 export default function Inventory({ turtle }: InventoryProps) {
 	const classes = useStyles();
 	const [state, setState] = useState<{
@@ -57,12 +59,14 @@ export default function Inventory({ turtle }: InventoryProps) {
 	}>(initialState);
 
 	const handleClick = (event: React.MouseEvent<HTMLDivElement>, slot: number) => {
+		console.log("handle click")
 		event.preventDefault();
 		setState({
 			mouseX: event.clientX - 2,
 			mouseY: event.clientY - 4,
 			slot
 		});
+		console.log("handle click after setstate")
 	};
 
 	const handleClose = (amount: 'all' | 'half' | 'one') => {
@@ -103,9 +107,12 @@ export default function Inventory({ turtle }: InventoryProps) {
 			>
 				{menuItems}
 			</Menu>
+			{console.log(turtle)}
 			{
 				turtle.inventory.map((item, i) => (
-					<Grid key={i} item xs={3} className={classes.inventoryItem}>
+					<Grid container key={i} item xs={3} className={classes.inventoryItem}>
+						
+						{console.log({item,i})}
 						<Paper onContextMenu={(ev) => handleClick(ev, i + 1)} className={i + 1 === turtle.selectedSlot ? 'selected' : ''} style={{
 							background: item ? Color({
 								h: hashCode(item.name + ':' + item.damage) % 360,
