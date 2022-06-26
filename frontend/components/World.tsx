@@ -3,7 +3,7 @@ import { useRef, useState, useMemo, useEffect, Suspense, HTMLProps, RefObject, S
 import { Mesh, BoxBufferGeometry, Vector3, Quaternion, Euler, Raycaster, Vector2, Object3D } from 'three';
 import { OrbitControls } from 'three-orbitcontrols-ts';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { Turtle, TurtleContext, World } from '../pages';
+import { Turtle, TurtleContext, World ,BlockDirection} from '../pages';
 import useEventListener from '@use-it/event-listener';
 import Color from 'color';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -91,7 +91,7 @@ function OtherTurtle({ obj, turtle, switchTurtle }: { obj: any, turtle: Turtle, 
 			object={geom}
 		/>
 		<mesh
-			onPointerUp={() => switchTurtle(turtle)}
+			// onPointerUp={() => switchTurtle(turtle)}
 			visible={false}
 			position={[turtle.x, turtle.y, turtle.z]}
 			name={turtle.label}
@@ -169,6 +169,12 @@ export default function WorldRenderer({ turtle, world, disableEvents, ...props }
 		} else if (ev.code === 'ShiftLeft') {
 			moved = true;
 			currentTurtleRef.current.down();
+		} else if (ev.code === 'KeyE') {
+			moved = true;
+			currentTurtleRef.current.dig(BlockDirection.FORWARD);
+		} else if (ev.code === 'KeyQ') {
+			moved = true;
+			currentTurtleRef.current.place(BlockDirection.FORWARD);
 		} else if (ev.code === 'KeyV') {
 			moved = true;
 			setShowWholeWorld(w => !w);
@@ -232,7 +238,7 @@ export default function WorldRenderer({ turtle, world, disableEvents, ...props }
 					{Object.keys(world).map(k => {
 						let positions = k.split(',').map(p => parseInt(p)) as [number, number, number];
 						let { name, metadata } = world[k];
-						if (dontShowStone && name ==='minecraft:stone') {
+						if (dontShowStone && (name ==='minecraft:stone' || name === 'minecraft:water')) {
 							return null;
 						}
 						if (!showWholeWorld && turtle && (Math.pow(positions[0] - turtle.x, 2) + Math.pow(positions[1] - turtle.y, 2) + Math.pow(positions[2] - turtle.z, 2)) > 1000) {

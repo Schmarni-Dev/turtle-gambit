@@ -32,7 +32,14 @@ export default class World extends EventEmitter {
 			}
 			return;
 		}
-		this.db.push(dataPath, block);
+
+		try{
+			console.log({dataPath, block});
+			this.db.push(dataPath, block);
+		}
+		catch {
+			console.log("woops")
+		}
 		this.emit('update', this.getAllBlocks());
 	}
 

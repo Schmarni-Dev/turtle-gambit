@@ -9,7 +9,7 @@
 
 
 -- I stole this from you :)
-function getItemIndex(itemName)
+local function getItemIndex(itemName)
 	for slot = 1, 16, 1 do
 		local item = turtle.getItemDetail(slot)
 		if(item ~= nil) then
@@ -38,7 +38,7 @@ local function fillTable(t)
 end
 
 
-function undergoMitosis()
+local function undergoMitosis()
 	turtle.select(getItemIndex("computercraft:peripheral"))
 	if not turtle.place() then
 		return nil
@@ -72,8 +72,7 @@ end
 
 
 
-function mineTunnel(obj, ws)
-	local file
+local function mineTunnel(obj, ws)
 	local blocks = {}
 	for i=1,obj.length,1 do
 		if obj.direction == 'forward' then
@@ -133,59 +132,61 @@ function mineTunnel(obj, ws)
 	return blocks
 end
 
-function goTo(obj, ws)
-	local file
-    print("GOTO")
-	for i=1,20,1 do
+
+-- local function goTo(obj, ws)
+-- 	local file
+--     print("GOTO")
+-- 	for i=1,20,1 do
 		
 			
 				
-	    local success = turtle.up()
-		if not success then
-			return res
-		end
-		ws.send(textutils.serializeJSON({move="u", nonce=obj.nonce}))
+-- 	    local success = turtle.up()
+-- 		if not success then
+-- 			return res
+-- 		end
+-- 		ws.send(textutils.serializeJSON({move="u", nonce=obj.nonce}))
 			
-	end
-    for i=1,obj.rot1 ,1 do
-        turtle.turnRight()
-        ws.send(textutils.serializeJSON({move="r", nonce=obj.nonce}))
-    end
-    for i=1,obj.st1 ,1 do
-        local success = turtle.forward()
-		if not success then
-			return res
-		end
-		ws.send(textutils.serializeJSON({move="f", nonce=obj.nonce}))
-    end
-    for i=1,obj.rot2 ,1 do
-        turtle.turnRight()
-        ws.send(textutils.serializeJSON({move="r", nonce=obj.nonce}))
-    end
-    for i=1,obj.st2 ,1 do
-        local success = turtle.forward()
-		if not success then
-			return res
-		end
-		ws.send(textutils.serializeJSON({move="f", nonce=obj.nonce}))
-    end
-    for i=1,obj.st3 ,1 do
-        local success = turtle.down()
-		if not success then
-			return res
-		end
-		ws.send(textutils.serializeJSON({move="d", nonce=obj.nonce}))
-    end
-    return nil
-end
+-- 	end
+--     for i=1,obj.rot1 ,1 do
+--         turtle.turnRight()
+--         ws.send(textutils.serializeJSON({move="r", nonce=obj.nonce}))
+--     end
+--     for i=1,obj.st1 ,1 do
+--         local success = turtle.forward()
+-- 		if not success then
+-- 			return res
+-- 		end
+-- 		ws.send(textutils.serializeJSON({move="f", nonce=obj.nonce}))
+--     end
+--     for i=1,obj.rot2 ,1 do
+--         turtle.turnRight()
+--         ws.send(textutils.serializeJSON({move="r", nonce=obj.nonce}))
+--     end
+--     for i=1,obj.st2 ,1 do
+--         local success = turtle.forward()
+-- 		if not success then
+-- 			return res
+-- 		end
+-- 		ws.send(textutils.serializeJSON({move="f", nonce=obj.nonce}))
+--     end
+--     for i=1,obj.st3 ,1 do
+--         local success = turtle.down()
+-- 		if not success then
+-- 			return res
+-- 		end
+-- 		ws.send(textutils.serializeJSON({move="d", nonce=obj.nonce}))
+--     end
+--     return nil
+-- end
 
-function websocketLoop()
+local function websocketLoop()
 	
 	local ws, err = http.websocket("ws://schmerver.mooo.com:57")
  
 	if err then
 		print(err)
 	elseif ws then
+		ws.send('{"type":"init","data":"turtle"}')
 		while true do
 			term.clear()
 			term.setCursorPos(1,1)
@@ -201,7 +202,7 @@ function websocketLoop()
 			end
 			local obj = textutils.unserialiseJSON(message)
 			if obj.type == 'eval' then
-				print(obj['function'])
+				-- print(obj['function'])
 				local func = loadstring(obj['function'])
 				local result = func()
 				
@@ -210,7 +211,7 @@ function websocketLoop()
 						result = textutils.empty_json_array
 					end
 				end
-				print(textutils.serializeJSON(result))
+				print(textutils.serializeJSON({data=result, nonce=obj.nonce}))
 				ws.send(textutils.serializeJSON({data=result, nonce=obj.nonce}))
 			elseif obj.type == 'mitosis' then
 				local status, res = pcall(undergoMitosis)

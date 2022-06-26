@@ -52,12 +52,14 @@ export class Turtle extends EventEmitter {
   z: number = 0;
   d: Direction = 0;
   mining: boolean = false;
+  working: boolean = false;
 
   constructor(ws: WebSocket, world: World) {
     super();
     this.world = world;
     this.ws = ws;
     this.exec<string>("os.getComputerLabel()").then(async (label) => {
+      console.log(label)
       if (label) {
         this.label = label;
       } else {
@@ -95,8 +97,10 @@ export class Turtle extends EventEmitter {
   }
 
   exec<T>(command: string): Promise<T> {
-    return new Promise((r) => {
+    this.working = true;
+    let p = new Promise<T>((r) => {
       const nonce = getNonce();
+      console.log("exec Turtle")
       this.ws.send(
         JSON.stringify({
           type: "eval",
@@ -109,15 +113,26 @@ export class Turtle extends EventEmitter {
         try {
           let res = JSON.parse(resp);
           if (res?.nonce === nonce) {
-            // console.log(res)
+            console.log("ok")
             r(res.data);
             this.ws.off("message", listener);
           }
-        } catch (e) {}
+        } catch (e) {console.log(e)}
       };
 
       this.ws.on("message", listener);
     });
+    p.then(() => {
+      this.working = false
+    })
+    return p;
+  }
+
+  async CUM(): Promise<boolean> {
+    return new Promise((r) => {
+      console.log("CUM")
+      r(true)
+    })
   }
 
   async forward(): Promise<boolean> {
@@ -241,9 +256,15 @@ export class Turtle extends EventEmitter {
   }
 
   async updatePos() {
-    this.world.updateTurtle(this, this.x, this.y, this.z, this.d);
-    await this.updateBlock();
-    this.emit("update");
+    try{
+      console.log("pos");
+      
+      this.world.updateTurtle(this, this.x, this.y, this.z, this.d);
+      await this.updateBlock();
+      this.emit("update");
+    }catch {
+      console.log("Why Pos update")
+    }
   }
 
   private async updateBlock() {
@@ -266,9 +287,12 @@ export class Turtle extends EventEmitter {
   }
 
   async dig(direction: BlockDirection) {
+    console.log("diging")
+    console.log(this.parseDirection("dig", direction))
     let r = await this.exec<boolean>(
       `turtle.${this.parseDirection("dig", direction)}()`
     );
+    console.log("CUM")
     await this.updateInventory();
     await this.updateBlock();
     return r;

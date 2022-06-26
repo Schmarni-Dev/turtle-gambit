@@ -9,7 +9,8 @@ import React, {
 import TurtlePage from "../components/Turtle";
 import { EventEmitter } from "events";
 import WorldRenderer from "../components/World";
-import { makeStyles } from "@material-ui/core";
+import { makeStyles} from "@material-ui/core";
+import { wsInstance } from "../src/ws"
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -26,6 +27,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+
 interface MyWindow extends Window {
   exec<T>(index: number, code: string, ...args: any[]): Promise<T>;
   refreshData(): void;
@@ -34,6 +36,9 @@ interface MyWindow extends Window {
 }
 
 declare var window: MyWindow;
+// window.exec = function <T>(index: number, code: string, ...args: any[]): Promise<T> {
+
+// }
 
 export enum BlockDirection {
   FORWARD,
@@ -141,15 +146,15 @@ export class Turtle extends EventEmitter {
   async mineTunnel(direction: string, length: number) {
     return window.exec<string>(this.id, "mineTunnel", direction, length);
   }
-  async goTo(
-    rot1: number,
-    st1: number,
-    rot2: number,
-    st2: number,
-    st3: number
-  ) {
-    return window.exec<string>(this.id, "goTo", rot1, st1, rot2, st2, st3);
-  }
+  // async goTo(
+  //   rot1: number,
+  //   st1: number,
+  //   rot2: number,
+  //   st2: number,
+  //   st3: number
+  // ) {
+  //   return window.exec<string>(this.id, "goTo", rot1, st1, rot2, st2, st3);
+  // }
   async updatePos() {
     return window.exec<string>(this.id, "updatePos");
   }
@@ -162,25 +167,104 @@ export const TurtleContext = createContext<
   [number, Dispatch<SetStateAction<number>>, Turtle[]]
 >([-1, () => {}, []] as any);
 
+type customPromise<t> = {resolve:Function,reject:Function,promise:Promise<t>}
+var wsPromises:customPromise<any>[] = []
+
+
+
+
 const IndexPage = () => {
   const classes = useStyles();
-
   const [turtles, setTurtles] = useState<Turtle[]>([]);
   const [world, setWorld] = useState<World>({});
   const [turtleId, setTurtleId] = useState<number>(-1);
+  const [cmdId, setCmdId] = useState<number>(0);
+
+  
+
+  function sendExec(data:string) {
+    wsInstance?.send(JSON.stringify({dataType:"exec",data}))
+  }
 
   useEffect(() => {
-    window.setTurtles = (array: any[]) => {
-      setTurtles(
-        array.map((turtle) => {
-          return new Turtle(turtle);
-        })
-      );
-    };
-    window.setWorld = setWorld;
+    wsInstance?.addEventListener("open", () => {
+      window.refreshData = function () {
+        wsInstance?.send(JSON.stringify({dataType:"refreshData",data:""}))
+      }
+    })
+  }, [])
 
-    window.refreshData();
+  useEffect(() => {
+    wsInstance?.addEventListener("open", () => {
+      window.setTurtles = (data:string) => {
+        let array: any[] = JSON.parse(data)
+        setTurtles(
+          array.map((turtle) => {
+            return new Turtle(turtle);
+          })
+        );
+      };
+      window.setWorld = (data:string) => {
+        setWorld(JSON.parse(data))
+      }
+
+      window.refreshData();
+    })
   }, [setTurtles, setWorld]);
+
+
+
+  useEffect((): any => {
+    // connect to socket server
+    wsInstance?.addEventListener("open", () => {
+      console.log("SOCKET CONNECTED!");
+      wsInstance?.send(JSON.stringify({type:"init", data:"control"}))
+
+      //adds message eventListener
+      wsInstance?.addEventListener("message", (event) => {
+        let j = JSON.parse(event.data)
+        console.log(j)
+        if (j.type === "exec") {
+          wsPromises[j.Pindex].resolve(j.data)
+        }
+        if (j.type === "setTurtles") {
+          window.setTurtles(j.data)
+        }
+        if (j.type === "setWorld") {
+          window.setWorld(j.data)
+        }
+        if (j.type === "deleteCMD") {
+          wsPromises[j.Pindex].reject("")
+        }
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    window.exec = function <T>(index: number, code: string, ...args: any[]): Promise<T> {
+      let resolve:Function = () => {}
+      let reject:Function = () => {}
+      let p = new Promise<T>((res,rej) =>{
+        resolve = res;
+        reject = rej;
+      })
+    
+      let cp = { resolve, reject, p } as unknown as customPromise<T>
+  
+      
+  
+      wsPromises[cmdId] = cp
+      console.log({index,code,args:[...args],Pindex:cmdId})
+    
+      sendExec(JSON.stringify({index,code,args:[...args],Pindex:cmdId}))
+  
+      setCmdId(cmdId + 1)
+    
+      return p;
+    }
+  }, [])
+
+  
 
   const selectedTurtle = turtles.find((t) => t.id === turtleId);
   useEffect(() => {
